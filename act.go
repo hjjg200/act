@@ -11,20 +11,23 @@ func Assert(predicate bool, err error) {
     }
 }
 
+func toError(r interface{}) error {
+    if err, ok := r.(error); ok {
+        return err
+    }
+    return fmt.Errorf("%V", r)
+}
+
 func Catch(block func(error)) {
     if r := recover(); r != nil {
-        if err, ok := r.(error); !ok {
-            block(fmt.Errorf("%V", r))
-        } else {
-            block(err)
-        }
+        block(toError(r))
     }
 }
 
 func CatchAndStore(perr *error) {
-    Catch(func(err2 error) {
-        *perr = err2
-    })
+    if r := recover(); r != nil {
+        *perr = toError(r)
+    }
 }
 
 func Stack() string {
